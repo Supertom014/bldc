@@ -77,7 +77,8 @@ void app_set_configuration(app_configuration *conf) {
 		break;
 
 	case APP_ADC:
-		app_adc_start(true);
+		// Use UART as buttons
+		app_adc_start(2);
 		break;
 
 	case APP_UART:
@@ -93,7 +94,8 @@ void app_set_configuration(app_configuration *conf) {
 
 	case APP_ADC_UART:
 		hw_stop_i2c();
-		app_adc_start(false);
+		// Use no inputs as buttons
+		app_adc_start(0);
 		app_uartcomm_start();
 		break;
 

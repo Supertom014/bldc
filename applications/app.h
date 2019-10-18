@@ -34,7 +34,7 @@ void app_ppm_stop(void);
 float app_ppm_get_decoded_level(void);
 void app_ppm_configure(ppm_config *conf);
 
-void app_adc_start(bool use_rx_tx);
+void app_adc_start(uint32_t buttons_mode);
 void app_adc_stop(void);
 void app_adc_configure(adc_config *conf);
 float app_adc_get_decoded_level(void);

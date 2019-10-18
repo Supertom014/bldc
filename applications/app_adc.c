@@ -46,7 +46,7 @@ static volatile float decoded_level = 0.0;
 static volatile float read_voltage = 0.0;
 static volatile float decoded_level2 = 0.0;
 static volatile float read_voltage2 = 0.0;
-static volatile bool use_rx_tx_as_buttons = false;
+static volatile int buttons_mode = 0; // 0 No reverse buttons, 1 Use SERVO IO as buttons, 2 Use UART as buttons
 static volatile bool stop_now = true;
 static volatile bool is_running = false;
 
@@ -55,8 +55,8 @@ void app_adc_configure(adc_config *conf) {
 	ms_without_power = 0.0;
 }
 
-void app_adc_start(bool use_rx_tx) {
-	use_rx_tx_as_buttons = use_rx_tx;
+void app_adc_start(uint32_t buttons_mode) {
+	buttons_mode = buttons_mode;
 	stop_now = false;
 	chThdCreateStatic(adc_thread_wa, sizeof(adc_thread_wa), NORMALPRIO, adc_thread, NULL);
 }
@@ -90,12 +90,16 @@ static THD_FUNCTION(adc_thread, arg) {
 
 	chRegSetThreadName("APP_ADC");
 
-	// Set servo pin as an input with pullup
-	if (use_rx_tx_as_buttons) {
+	// Set input pins as an input with pullup
+	if (buttons_mode == 2) {
+		// Set UART pin as an input with pullup
 		palSetPadMode(HW_UART_TX_PORT, HW_UART_TX_PIN, PAL_MODE_INPUT_PULLUP);
 		palSetPadMode(HW_UART_RX_PORT, HW_UART_RX_PIN, PAL_MODE_INPUT_PULLUP);
-	} else {
+	} else if (buttons_mode == 1) {
+		// Set servo pin as an input with pullup
 		palSetPadMode(HW_ICU_GPIO, HW_ICU_PIN, PAL_MODE_INPUT_PULLUP);
+	} else {
+		// Set no pins
 	}
 
 	is_running = true;
@@ -219,7 +223,8 @@ static THD_FUNCTION(adc_thread, arg) {
 		// Read the button pins
 		bool cc_button = false;
 		bool rev_button = false;
-		if (use_rx_tx_as_buttons) {
+		if (buttons_mode == 2) {
+			// Use UART pins as inputs
 			cc_button = !palReadPad(HW_UART_TX_PORT, HW_UART_TX_PIN);
 			if (config.cc_button_inverted) {
 				cc_button = !cc_button;
@@ -228,7 +233,8 @@ static THD_FUNCTION(adc_thread, arg) {
 			if (config.rev_button_inverted) {
 				rev_button = !rev_button;
 			}
-		} else {
+		} else if (buttons_mode == 1) {
+			// Use SERVO IO pin as inputs
 			// When only one button input is available, use it differently depending on the control mode
 			if (config.ctrl_type == ADC_CTRL_TYPE_CURRENT_REV_BUTTON ||
                     config.ctrl_type == ADC_CTRL_TYPE_CURRENT_REV_BUTTON_BRAKE_CENTER ||
@@ -245,6 +251,8 @@ static THD_FUNCTION(adc_thread, arg) {
 					cc_button = !cc_button;
 				}
 			}
+		} else {
+			// Use no input pins
 		}
 
 		// All pins and buttons are still decoded for debugging, even
@@ -289,6 +297,15 @@ static THD_FUNCTION(adc_thread, arg) {
 		// Apply throttle curve
 		pwr = utils_throttle_curve(pwr, config.throttle_exp, config.throttle_exp_brake, config.throttle_exp_mode);
 
+		#ifdef SERVO_OUT_ENABLE
+		// pwr 0.0 to 1.0
+		if (pwr > SERVO_OUT_SWITCH_THRESH){
+			servo_simple_set_output(SERVO_OUT_STOP_POS);
+		} else {
+			servo_simple_set_output(SERVO_OUT_START_POS);
+		}
+		#endif
+
 		// Apply ramping
 		static systime_t last_time = 0;
 		static float pwr_ramp = 0.0;
@@ -304,7 +321,6 @@ static THD_FUNCTION(adc_thread, arg) {
 			last_time = chVTGetSystemTimeX();
 			pwr = pwr_ramp;
 		}
-
 		float current_rel = 0.0;
 		bool current_mode = false;
 		bool current_mode_brake = false;

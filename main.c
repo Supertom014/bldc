@@ -261,7 +261,7 @@ int main(void) {
 #endif
 
 #if SERVO_OUT_ENABLE
-	servo_simple_init();
+	servo_simple_init(SERVO_OUT_START_POS);
 #endif
 
 	// Threads

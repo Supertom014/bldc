@@ -21,7 +21,7 @@
 #define SERVO_SIMPLE_H_
 
 // Functions
-void servo_simple_init(void);
+void servo_simple_init(float init_pos);
 void servo_simple_set_output(float out);
 
 #endif /* SERVO_SIMPLE_H_ */

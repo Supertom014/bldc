@@ -30,7 +30,7 @@
 
 #if SERVO_OUT_ENABLE
 
-void servo_simple_init(void) {
+void servo_simple_init(float init_pos) {
 	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
 	TIM_OCInitTypeDef  TIM_OCInitStructure;
 
@@ -61,7 +61,7 @@ void servo_simple_init(void) {
 
 	TIM_ARRPreloadConfig(HW_ICU_TIMER, ENABLE);
 
-	servo_simple_set_output(0.5);
+	servo_simple_set_output(init_pos);
 
 	TIM_Cmd(HW_ICU_TIMER, ENABLE);
 }

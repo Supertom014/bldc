@@ -203,11 +203,14 @@
  * Servo output driver
  */
 #ifndef SERVO_OUT_ENABLE
-#define SERVO_OUT_ENABLE			0		// Enable servo output
+#define SERVO_OUT_ENABLE			1		// Enable servo output
 #endif
 #define SERVO_OUT_PULSE_MIN_US		1000	// Minimum pulse length in microseconds
 #define SERVO_OUT_PULSE_MAX_US		2000	// Maximum pulse length in microseconds
 #define SERVO_OUT_RATE_HZ			50		// Update rate in Hz
+#define SERVO_OUT_START_POS			0.2		// Start posistion in Rads
+#define SERVO_OUT_STOP_POS			0.8		// Stop posistion in Rads
+#define SERVO_OUT_SWITCH_THRESH		0.1		// Throttle value (0.0 to 1.0) to trigger SERVO
 
 // Correction factor for computations that depend on the old resistor division factor
 #define VDIV_CORR					((VIN_R2 / (VIN_R2 + VIN_R1)) / (2.2 / (2.2 + 33.0)))
