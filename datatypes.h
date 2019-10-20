@@ -405,7 +405,7 @@ typedef struct {
 	bool multi_esc;
 	bool tc;
 	float tc_max_diff;
-	uint32_t update_rate_hz;
+	uint16_t update_rate_hz;
 } adc_config;
 
 // Nunchuk control types
