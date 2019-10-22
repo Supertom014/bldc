@@ -62,15 +62,19 @@ void servo_simple_init(float init_pos) {
 	TIM_ARRPreloadConfig(HW_ICU_TIMER, ENABLE);
 
 	servo_simple_set_output(init_pos);
-
+	
 	TIM_Cmd(HW_ICU_TIMER, ENABLE);
 }
 
 void servo_simple_set_output(float out) {
-	utils_truncate_number(&out, 0.0, 1.0);
-
-	float us = (float)SERVO_OUT_PULSE_MIN_US + out *
-			(float)(SERVO_OUT_PULSE_MAX_US - SERVO_OUT_PULSE_MIN_US);
+	
+	float us = 0.0;
+	
+	if (out != -1){
+		utils_truncate_number(&out, 0.0, 1.0);
+		us = (float)SERVO_OUT_PULSE_MIN_US + out * (float)(SERVO_OUT_PULSE_MAX_US - SERVO_OUT_PULSE_MIN_US);
+	}
+	
 	us *= (float)TIM_CLOCK / 1000000.0;
 
 	if (HW_ICU_CHANNEL == ICU_CHANNEL_1) {

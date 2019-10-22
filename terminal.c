@@ -683,8 +683,25 @@ void terminal_process_string(char *str) {
 				encoder_sincos_get_signal_above_max_error_cnt(),
 				(double)encoder_sincos_get_signal_above_max_error_rate() * (double)100.0);
 		}
-	}
+	} else if (strcmp(argv[0], "setservoout") == 0) {
+		#if SERVO_OUT_ENABLE
+		if (argc == 2) {
+			float posistion = -1.0;
+			sscanf(argv[1], "%f", &posistion);
 
+			if ((posistion >= 0.0 && posistion <= 1.0) || posistion == -1.0) {
+				servo_simple_set_output(posistion);
+			} else {
+				commands_printf("Invalid argument(s).\n");
+			}
+		} else {
+			commands_printf("This command requires one argument.\n");
+		}
+		#else
+			commands_printf("Command not supported in this build.\n");
+		#endif
+	}
+	
 	// The help command
 	else if (strcmp(argv[0], "help") == 0) {
 		commands_printf("Valid commands are:");
@@ -796,7 +813,10 @@ void terminal_process_string(char *str) {
 		commands_printf("  initiates detection in all VESCs found on the CAN-bus.");
 		
 		commands_printf("encoder");
-		commands_printf("  Prints the status of the AS5047, AD2S1205, or Sin/Cos encoder.");
+		commands_printf("  Prints the status of the AS5047, AD2S1205, or Sin/Cos encoder.");		
+		
+		commands_printf("setservoout [posistion]");
+		commands_printf("  Set servo out posistion from 0.0 to 1.0.");
 
 		for (int i = 0;i < callback_write;i++) {
 			if (callbacks[i].cbf == 0) {

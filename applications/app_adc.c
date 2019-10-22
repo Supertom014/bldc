@@ -28,11 +28,12 @@
 #include "comm_can.h"
 #include "hw.h"
 #include <math.h>
+#include "servo_simple.h"
 
 // Settings
 #define MAX_CAN_AGE						0.1
 #define MIN_MS_WITHOUT_POWER			500
-#define FILTER_SAMPLES					5
+#define FILTER_SAMPLES					50
 #define RPM_FILTER_SAMPLES				8
 
 // Threads
@@ -41,12 +42,13 @@ static THD_WORKING_AREA(adc_thread_wa, 1024);
 
 // Private variables
 static volatile adc_config config;
+static volatile int servo_count = 0;
 static volatile float ms_without_power = 0.0;
 static volatile float decoded_level = 0.0;
 static volatile float read_voltage = 0.0;
 static volatile float decoded_level2 = 0.0;
 static volatile float read_voltage2 = 0.0;
-static volatile int buttons_mode = 0; // 0 No reverse buttons, 1 Use SERVO IO as buttons, 2 Use UART as buttons
+static volatile uint32_t buttons_mode = 0; // 0 No reverse buttons, 1 Use SERVO IO as buttons, 2 Use UART as buttons
 static volatile bool stop_now = true;
 static volatile bool is_running = false;
 
@@ -55,8 +57,8 @@ void app_adc_configure(adc_config *conf) {
 	ms_without_power = 0.0;
 }
 
-void app_adc_start(uint32_t buttons_mode) {
-	buttons_mode = buttons_mode;
+void app_adc_start(uint32_t buttons_mode_func) {
+	buttons_mode = buttons_mode_func;
 	stop_now = false;
 	chThdCreateStatic(adc_thread_wa, sizeof(adc_thread_wa), NORMALPRIO, adc_thread, NULL);
 }
@@ -297,12 +299,26 @@ static THD_FUNCTION(adc_thread, arg) {
 		// Apply throttle curve
 		pwr = utils_throttle_curve(pwr, config.throttle_exp, config.throttle_exp_brake, config.throttle_exp_mode);
 
-		#ifdef SERVO_OUT_ENABLE
+		#if SERVO_OUT_ENABLE
 		// pwr 0.0 to 1.0
-		if (pwr > SERVO_OUT_SWITCH_THRESH){
-			servo_simple_set_output(SERVO_OUT_STOP_POS);
+		if (pwr >= SERVO_OUT_SWITCH_THRESH){
+			if (servo_count < (config.update_rate_hz/2)){
+				servo_count++;
+			}
+			if (servo_count > (config.update_rate_hz/2)){
+				servo_simple_set_output(-1); // Don't move
+			} else {
+				servo_simple_set_output(SERVO_OUT_STOP_POS);
+			}
 		} else {
-			servo_simple_set_output(SERVO_OUT_START_POS);
+			if (servo_count > 0){
+				servo_count--;
+			}
+			if (servo_count == 0){
+				servo_simple_set_output(-1); // Don't move
+			} else {
+				servo_simple_set_output(SERVO_OUT_START_POS);
+			}
 		}
 		#endif
 
