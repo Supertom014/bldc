@@ -205,8 +205,8 @@
 #ifndef SERVO_OUT_ENABLE
 #define SERVO_OUT_ENABLE			1		// Enable servo output
 #endif
-#define SERVO_OUT_PULSE_MIN_US		1000	// Minimum pulse length in microseconds
-#define SERVO_OUT_PULSE_MAX_US		2000	// Maximum pulse length in microseconds
+#define SERVO_OUT_PULSE_MIN_US		500		// Minimum pulse length in microseconds
+#define SERVO_OUT_PULSE_MAX_US		2250	// Maximum pulse length in microseconds
 #define SERVO_OUT_RATE_HZ			50		// Update rate in Hz
 #define SERVO_OUT_START_POS			0.2		// Start posistion in Rads
 #define SERVO_OUT_STOP_POS			0.8		// Stop posistion in Rads

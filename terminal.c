@@ -34,6 +34,7 @@
 #include "drv8320s.h"
 #include "drv8323s.h"
 #include "app.h"
+#include "servo_simple.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -686,13 +687,32 @@ void terminal_process_string(char *str) {
 	} else if (strcmp(argv[0], "setservoout") == 0) {
 		#if SERVO_OUT_ENABLE
 		if (argc == 2) {
-			float posistion = -1.0;
-			sscanf(argv[1], "%f", &posistion);
+			float servo_posistion = -1.0;
+			sscanf(argv[1], "%f", &servo_posistion);
 
-			if ((posistion >= 0.0 && posistion <= 1.0) || posistion == -1.0) {
-				servo_simple_set_output(posistion);
+			if ((servo_posistion >= 0.0 && servo_posistion <= 1.0) || servo_posistion == -1.0) {
+				servo_simple_set_output(servo_posistion);
 			} else {
 				commands_printf("Invalid argument(s).\n");
+			}
+		} else {
+			commands_printf("This command requires one argument.\n");
+		}
+		#else
+			commands_printf("Command not supported in this build.\n");
+		#endif
+	} else if (strcmp(argv[0], "setservooutus") == 0) {
+		#if SERVO_OUT_ENABLE
+		if (argc == 2) {
+			float servo_time = 1500;
+			sscanf(argv[1], "%f", &servo_time);
+			
+			float us = servo_time;
+			
+			if (HW_ICU_CHANNEL == ICU_CHANNEL_1) {
+				HW_ICU_TIMER->CCR1 = (uint32_t)us;
+			} else if (HW_ICU_CHANNEL == ICU_CHANNEL_2) {
+				HW_ICU_TIMER->CCR2 = (uint32_t)us;
 			}
 		} else {
 			commands_printf("This command requires one argument.\n");
@@ -816,7 +836,7 @@ void terminal_process_string(char *str) {
 		commands_printf("  Prints the status of the AS5047, AD2S1205, or Sin/Cos encoder.");		
 		
 		commands_printf("setservoout [posistion]");
-		commands_printf("  Set servo out posistion from 0.0 to 1.0.");
+		commands_printf("  Set servo out posistion from 0.0 to 1.0 or -1.0 to idle.");
 
 		for (int i = 0;i < callback_write;i++) {
 			if (callbacks[i].cbf == 0) {

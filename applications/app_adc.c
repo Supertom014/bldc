@@ -305,7 +305,7 @@ static THD_FUNCTION(adc_thread, arg) {
 			if (servo_count < (config.update_rate_hz/2)){
 				servo_count++;
 			}
-			if (servo_count > (config.update_rate_hz/2)){
+			if (servo_count == (config.update_rate_hz/2)){
 				servo_simple_set_output(-1); // Don't move
 			} else {
 				servo_simple_set_output(SERVO_OUT_STOP_POS);
